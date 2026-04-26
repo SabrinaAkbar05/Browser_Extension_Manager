@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Extensions Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #161b27;
+    --surface-2: #1e2535;
+    --surface-3: #252d3f;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.14);
+    --text-primary: #f0f2f8;
+    --text-secondary: #8892a4;
+    --text-muted: #5a6478;
+    --accent: #f05252;
+    --accent-glow: rgba(240,82,82,0.2);
+    --toggle-on: #f05252;
+    --toggle-off: #2d3448;
+    --btn-remove: rgba(255,255,255,0.06);
+    --btn-remove-hover: rgba(255,255,255,0.1);
+    --filter-active-bg: #f05252;
+    --filter-active-text: #fff;
+    --filter-bg: rgba(255,255,255,0.06);
+    --filter-text: #8892a4;
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    --card-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    --radius: 14px;
+    --radius-sm: 8px;
+    --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  [data-theme="light"] {
+    --bg: #f4f6fb;
+    --surface: #ffffff;
+    --surface-2: #f0f2f8;
+    --surface-3: #e8ebf4;
+    --border: rgba(0,0,0,0.07);
+    --border-hover: rgba(0,0,0,0.14);
+    --text-primary: #1a1f2e;
+    --text-secondary: #5a6478;
+    --text-muted: #9aa0b0;
+    --accent: #f05252;
+    --accent-glow: rgba(240,82,82,0.12);
+    --toggle-on: #f05252;
+    --toggle-off: #d0d5e0;
+    --btn-remove: rgba(0,0,0,0.05);
+    --btn-remove-hover: rgba(0,0,0,0.1);
+    --filter-active-bg: #f05252;
+    --filter-active-text: #fff;
+    --filter-bg: rgba(0,0,0,0.05);
+    --filter-text: #5a6478;
+    --shadow: 0 8px 32px rgba(0,0,0,0.1);
+    --card-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    transition: background var(--transition), color var(--transition);
+    overflow-x: hidden;
+  }
+
+  /* Background decoration */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 800px 500px at 10% 0%, rgba(240,82,82,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse 600px 400px at 90% 100%, rgba(100,120,240,0.04) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 0 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+
+  .logo-icon {
+    width: 34px;
+    height: 34px;
+    background: linear-gradient(135deg, #f05252, #c03030);
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(240,82,82,0.3);
+  }
+
+  .logo-icon svg { width: 18px; height: 18px; color: #fff; }
+
+  .theme-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+    color: var(--text-secondary);
+  }
+  .theme-btn:hover {
+    background: var(--surface-2);
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+    transform: rotate(20deg);
+  }
+  .theme-btn svg { width: 16px; height: 16px; }
+  .theme-btn .icon-sun { display: none; }
+  .theme-btn .icon-moon { display: block; }
+  [data-theme="light"] .theme-btn .icon-sun { display: block; }
+  [data-theme="light"] .theme-btn .icon-moon { display: none; }
+
+  /* List header */
+  .list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .list-title {
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    color: var(--text-primary);
+  }
+
+  .filter-group {
+    display: flex;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+  }
+
+  .filter-btn {
+    padding: 7px 16px;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    color: var(--filter-text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
+  }
+
+  .filter-btn:hover:not(.active) {
+    background: var(--surface-2);
+    color: var(--text-primary);
+  }
+
+  .filter-btn.active {
+    background: var(--filter-active-bg);
+    color: var(--filter-active-text);
+    box-shadow: 0 2px 8px rgba(240,82,82,0.3);
+  }
+
+  /* Grid */
+  .extensions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+
+  @media (max-width: 768px) {
+    .extensions-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 520px) {
+    .extensions-grid { grid-template-columns: 1fr; }
+    .list-header { flex-direction: column; align-items: flex-start; }
+  }
+
+  /* Card */
+  .ext-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: all var(--transition);
+    box-shadow: var(--card-shadow);
+    animation: fadeIn 0.3s ease both;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .ext-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  }
+
+  .ext-card.removing {
+    animation: slideOut 0.25s ease forwards;
+  }
+
+  @keyframes slideOut {
+    to { opacity: 0; transform: scale(0.92); }
+  }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .ext-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 18px;
+    overflow: hidden;
+  }
+
+  .ext-icon img { width: 28px; height: 28px; object-fit: contain; }
+
+  .ext-info { flex: 1; min-width: 0; }
+
+  .ext-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ext-desc {
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+  }
+
+  /* Remove button */
+  .remove-btn {
+    padding: 6px 14px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--btn-remove);
+    color: var(--text-secondary);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .remove-btn:hover {
+    background: var(--btn-remove-hover);
+    border-color: rgba(240,82,82,0.3);
+    color: var(--accent);
+  }
+
+  .remove-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* Toggle */
+  .toggle {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .toggle input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    z-index: 1;
+    margin: 0;
+  }
+
+  .toggle-track {
+    position: absolute;
+    inset: 0;
+    border-radius: 11px;
+    background: var(--toggle-off);
+    transition: background var(--transition), box-shadow var(--transition);
+  }
+
+  .toggle input:checked ~ .toggle-track {
+    background: var(--toggle-on);
+    box-shadow: 0 0 10px rgba(240,82,82,0.4);
+  }
+
+  .toggle-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform var(--transition);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+
+  .toggle input:checked ~ .toggle-track .toggle-thumb {
+    transform: translateX(18px);
+  }
+
+  .toggle:hover .toggle-track {
+    filter: brightness(1.1);
+  }
+
+  .toggle input:focus-visible ~ .toggle-track {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* Empty state */
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+  }
+
+  .empty-state svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    opacity: 0.4;
+  }
+
+  .empty-state p { font-size: 15px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/>
+          <path d="M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      Extensions
+    </div>
+    <button class="theme-btn" id="themeBtn" title="Toggle theme" aria-label="Toggle color theme">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+      </svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"/>
+        <line x1="12" y1="1" x2="12" y2="3"/>
+        <line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/>
+        <line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+    </button>
+  </header>
+
+  <div class="list-header">
+    <h1 class="list-title">Extensions List</h1>
+    <div class="filter-group" role="group" aria-label="Filter extensions">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="active">Active</button>
+      <button class="filter-btn" data-filter="inactive">Inactive</button>
+    </div>
+  </div>
+
+  <div class="extensions-grid" id="grid" role="list" aria-label="Browser extensions">
+  </div>
+</div>
+
+<script>
+const EMOJI_MAP = {
+  DevLens: '🔍',
+  StyleSpy: '🎨',
+  SpeedBoost: '⚡',
+  JSONWizard: '🧙',
+  'TabMaster Pro': '📑',
+  ViewportBuddy: '📐',
+  'Markup Notes': '📝',
+  GridGuides: '📏',
+  'Palette Picker': '🎨',
+  LinkChecker: '🔗',
+  'DOM Snapshot': '📸',
+  ConsolePlus: '💻',
+};
+
+const DATA = [
+  { name: "DevLens", description: "Quickly inspect page layouts and visualize element boundaries.", isActive: true },
+  { name: "StyleSpy", description: "Instantly analyze and copy CSS from any webpage element.", isActive: true },
+  { name: "SpeedBoost", description: "Optimizes browser resource usage to accelerate page loading.", isActive: false },
+  { name: "JSONWizard", description: "Formats, validates, and prettifies JSON responses in-browser.", isActive: true },
+  { name: "TabMaster Pro", description: "Organizes browser tabs into groups and sessions.", isActive: true },
+  { name: "ViewportBuddy", description: "Simulates various screen resolutions directly within the browser.", isActive: false },
+  { name: "Markup Notes", description: "Enables annotation and notes directly onto webpages for collaborative debugging.", isActive: true },
+  { name: "GridGuides", description: "Overlay customizable grids and alignment guides on any webpage.", isActive: false },
+  { name: "Palette Picker", description: "Instantly extracts color palettes from any webpage.", isActive: true },
+  { name: "LinkChecker", description: "Scans and highlights broken links on any page.", isActive: true },
+  { name: "DOM Snapshot", description: "Capture and export DOM structures quickly.", isActive: false },
+  { name: "ConsolePlus", description: "Enhanced developer console with advanced filtering and logging.", isActive: true },
+];
+
+let extensions = DATA.map((e, i) => ({ ...e, id: i }));
+let currentFilter = 'all';
+
+const grid = document.getElementById('grid');
+const themeBtn = document.getElementById('themeBtn');
+
+function getFiltered() {
+  if (currentFilter === 'active') return extensions.filter(e => e.isActive);
+  if (currentFilter === 'inactive') return extensions.filter(e => !e.isActive);
+  return extensions;
+}
+
+function renderCard(ext) {
+  const card = document.createElement('div');
+  card.className = 'ext-card';
+  card.dataset.id = ext.id;
+  card.setAttribute('role', 'listitem');
+  card.style.animationDelay = '0ms';
+
+  const emoji = EMOJI_MAP[ext.name] || '🔧';
+
+  card.innerHTML = `
+    <div class="card-top">
+      <div class="ext-icon" aria-hidden="true">${emoji}</div>
+      <div class="ext-info">
+        <div class="ext-name">${ext.name}</div>
+        <div class="ext-desc">${ext.description}</div>
+      </div>
+    </div>
+    <div class="card-bottom">
+      <button class="remove-btn" data-id="${ext.id}" aria-label="Remove ${ext.name}">Remove</button>
+      <label class="toggle" title="${ext.isActive ? 'Disable' : 'Enable'} ${ext.name}">
+        <input type="checkbox" ${ext.isActive ? 'checked' : ''} data-id="${ext.id}" aria-label="Toggle ${ext.name}">
+        <div class="toggle-track">
+          <div class="toggle-thumb"></div>
+        </div>
+      </label>
+    </div>
+  `;
+
+  card.querySelector('.remove-btn').addEventListener('click', () => removeExt(ext.id, card));
+  card.querySelector('input[type="checkbox"]').addEventListener('change', (e) => toggleExt(ext.id, e.target.checked));
+
+  return card;
+}
+
+function render() {
+  const filtered = getFiltered();
+  grid.innerHTML = '';
+
+  if (filtered.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+      </svg>
+      <p>No extensions found</p>
+    `;
+    grid.appendChild(empty);
+    return;
+  }
+
+  filtered.forEach((ext, i) => {
+    const card = renderCard(ext);
+    card.style.animationDelay = `${i * 40}ms`;
+    grid.appendChild(card);
+  });
+}
+
+function removeExt(id, cardEl) {
+  cardEl.classList.add('removing');
+  cardEl.addEventListener('animationend', () => {
+    extensions = extensions.filter(e => e.id !== id);
+    render();
+  }, { once: true });
+}
+
+function toggleExt(id, checked) {
+  extensions = extensions.map(e => e.id === id ? { ...e, isActive: checked } : e);
+  // Re-render only if filter would exclude this card now
+  if (currentFilter !== 'all') render();
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentFilter = btn.dataset.filter;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  });
+});
+
+themeBtn.addEventListener('click', () => {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  document.documentElement.setAttribute('data-theme', isLight ? 'dark' : 'light');
+});
+
+render();
+</script>
+</body>
+</html>
